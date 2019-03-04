@@ -1,94 +1,93 @@
-import random
+from random import choice
 
+combo_indices = [
+    [0, 1, 2],
+    [3, 4, 5],
+    [6, 7, 8],
+    [0, 3, 6],
+    [1, 4, 7],
+    [2, 5, 8],
+    [0, 4, 8],
+    [2, 4, 6],
+]
 
-# here we will create the board for the AI
-def environment(board):
-    # the board is a list of 10 strings that represents i
-    print('   |   |')
-    print(' ' + board[7] + ' | ' + board[8] + ' | ' + board[9])
-    print('   |   |')
-    print('-----------')
-    print('   |   |')
-    print(' ' + board[4] + ' | ' + board[5] + ' | ' + board[6])
-    print('   |   |')
-    print('-----------')
-    print('   |   |')
-    print(' ' + board[1] + ' | ' + board[2] + ' | ' + board[3])
-    print('   |   |')
+EMPTY_SIGN = '.'
+AI_SIGN = 'X' or 'x'
+OPPONENT_SIGN = 'O' or 'o'
 
+#here we will provide user options for the user to interact with the game
+print("Welcome to TIC TAC TOE by Rishabh Singh")
+print("Here we have created a Tic Tac Toe game in Python for users to play")
+print("The user's goal is to get 3 in a row for any signs they user from either X or O")
 
-# this allows the user to select from X or O for the board game as inputs
-def player_input():
-    letter = ' '
-    while not (letter == 'X' or letter == 'O'):
-        print('Please select from X or O')
-        letter = input().upper() & input().lower()
+# here we will be defining our board
+def print_board(board):
+    print(" ")
+    print(' '.join(board[:3]))
+    print('=' * 5)
+    print(' '.join(board[3:6]))
+    print('=' * 5)
+    print(' '.join(board[6:]))
+    print(" ")
 
-    # the first element in the list will be the player's letter and the second will be the AI
-    if letter == 'X' or 'x':
-        return ['X', 'O']
-    else:
-        return ['O', 'X']
+# defining the opponent move while it generates new board every time it's the users turn
+def opponent_move(board, row, column):
+    index = 3 * (row - 1) + (column - 1)
+    if board[index] == EMPTY_SIGN:
+        return board[:index] + OPPONENT_SIGN + board[index+1:]
+    return board
 
+# defining all moves that include ai and opponent moves
+def all_moves(board, sign):
+    move_list = []
+    for i, v in enumerate(board):
+        if v == EMPTY_SIGN:
+            new_board = board[:i] + sign + board[i + 1:]
+            move_list.append(new_board)
+            if win(new_board) == AI_SIGN:
+                return[new_board]
+    return move_list
 
-# random choose player that goes first
-def first():
-    if random.randint(0, 1) == 0:
-        return 'TTT Bot'
-    else:
-        return 'User'
+#defining all moves from the list
+def all_moves_from_list(board, sign):
+    move_list = []
+    for i, v in enumerate(board):
+        if v == EMPTY_SIGN:
+            move_list.append(board[:i] + sign + board[i + 1:])
+            return move_list
 
+# defining an ai   move
+def ai_move(board):
+    boards = all_moves(board, AI_SIGN)
+    for new_board in boards:
+        if win(new_board) == AI_SIGN:
+            print("YOU WON! CONGRATS")
+            return new_board
+        return choice(boards)
+    return choice(all_moves(board, AI_SIGN))
 
-# this function returns true if the player desires to play again
-def repeat():
-    print('Do you want to play again? (yes or no)')
-    return input().lower().startswith('y')
+# defining who won
+def win(board):
+    for index in combo_indices:
+        if board[index[0]] == board[index[1]] == board[index[2]] != EMPTY_SIGN:
+            return board[index[0]]
+        return EMPTY_SIGN
 
+# defining the game loop
+def game_loop():
+    board = EMPTY_SIGN * 9
+    empty_cell_count = 9
+    game_ends = False
+    while empty_cell_count > 0 and not game_ends:
+        if empty_cell_count % 2 == 1:
+            board = ai_move(board)
+        else:
+            row = int(input('Enter the row please: '))
+            column = int(input('Enter the Column: '))
+            board = opponent_move(board, row, column)
+        print_board(board)
+        game_ends = win(board) != EMPTY_SIGN
+        empty_cell_count = sum(1 for cell in board if cell == EMPTY_SIGN)
+        print("The game has been ended, would you like to replay?")
 
-# this function does the movement on the board for the game-play
-def move(board, letter, motion):
-    board[motion] = letter
-
-
-# Given a board and player's letter
-# this returns True if player has won
-def winner(board, letter):
-    # across the top
-    return ((board[7] == letter and board[8] == letter and board[9] == letter) or
-            # across the middle
-            (board[4] == letter and board[5] == letter and board[6] == letter) or
-            # across the bottom
-            (board[1] == letter and board[2] == letter and board[3] == letter) or
-            # down the left side
-            (board[7] == letter and board[4] == letter and board[1] == letter) or
-            # down the middle
-            (board[8] == letter and board[5] == letter and board[2] == letter) or
-            # down the right side
-            (board[9] == letter and board[6] == letter and board[3] == letter) or
-            # diagonal
-            (board[7] == letter and board[5] == letter and board[3] == letter) or
-            (board[9] == letter and board[5] == letter and board[1] == letter))
-
-
-# this will be a duplicate of the board
-def environment_copy(board):
-    duplicate = []
-    for i in board:
-        duplicate.append(i)
-    return duplicate
-
-
-# this will return true if the move that's been passed is free on the board
-def free_space(board, move):
-    return board[move] == ' '
-
-
-# allow the player to make move
-def player_move(board):
-    move = ' '
-    while move not in '1 2 3 4 5 6 7 8 9'.split() or not free_space(board, int(move)):
-        print('Make your next move by selecting a number! (1-9)')
-        move = input()
-    return int(move)
-
-
+game_loop()
